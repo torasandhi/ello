@@ -1,9 +1,9 @@
-#include "Managers\ObstacleManager.h"
+#include "Managers\SpawnerManager.h"
 #include "ObjectPoolSubsystem.h" // Import your pool system
 #include "UPoolableInterface.h"
 #include "Components/BoxComponent.h"
 
-AObstacleManager::AObstacleManager()
+ASpawnerManager::ASpawnerManager()
 {
 	SpawnArea = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnArea"));
 	RootComponent = SpawnArea;
@@ -11,68 +11,94 @@ AObstacleManager::AObstacleManager()
 	SpawnArea->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Just a volume, not a wall
 }
 
-void AObstacleManager::BeginPlay()
+void ASpawnerManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ObstacleClass != nullptr)
+	if (EnemyClass != nullptr)
 	{
 		GetWorldTimerManager().SetTimer(
 			SpawnTimerHandle,
 			this,
-			&AObstacleManager::SpawnObstacle,
+			&ASpawnerManager::SpawnEnemies,
 			SpawnInterval,
-			true // Loop = true
+			true
 		);
 	}
 }
 
-void AObstacleManager::SpawnObstacle()
-{
-	// 1. Get Box Data
-	FVector Origin = SpawnArea->GetComponentLocation();
-	FVector Extent = SpawnArea->GetScaledBoxExtent(); // Extent is Half-Size (Radius)
 
+void ASpawnerManager::SpawnObstacle()
+{
+	// 1. Safety Check
+	if (!ObstacleClass) return;
+
+	// 2. Get Location (Using your new helper!)
+	FVector SpawnLocation = GetRandomSpawnPointAtEdgePos();
+
+	// 3. Calculate Rotation (Face Center)
+	FVector Origin = SpawnArea->GetComponentLocation();
+	FVector DirectionToCenter = Origin - SpawnLocation;
+	FRotator SpawnRotation = DirectionToCenter.Rotation();
+
+	// 4. Get from Pool
+	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+	{
+		AActor* SpawnedObstacle = Pool->GetActorFromPool(ObstacleClass, SpawnLocation, SpawnRotation);
+
+		if (SpawnedObstacle)
+		{
+			// 5. Trigger the Interface (If obstacles use it for Timelines/Resets)
+			if (SpawnedObstacle->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
+			{
+				IPoolableInterface::Execute_OnSpawnFromPool(SpawnedObstacle);
+			}
+		}
+	}
+}
+
+void ASpawnerManager::SpawnEnemies()
+{
+	if (!EnemyClass) return;
+
+	FVector SpawnLocation = GetRandomSpawnPointAtEdgePos();
+	
+	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+	{
+		AActor* SpawnedEnemy = Pool->GetActorFromPool(EnemyClass, SpawnLocation, FRotator::ZeroRotator);
+	}
+}
+
+FVector ASpawnerManager::GetRandomSpawnPointAtEdgePos()
+{
+	if (!SpawnArea) return FVector::ZeroVector;
+
+	FVector Origin = SpawnArea->GetComponentLocation();
+	FVector Extent = SpawnArea->GetScaledBoxExtent();
 	FVector SpawnLocation = Origin;
 
-	// 2. Pick a random side (0=Front, 1=Back, 2=Right, 3=Left)
-	// We assume Z (Height) is constant, so we only randomize X and Y.
+	// 0=Front, 1=Back, 2=Right, 3=Left
 	int32 Side = FMath::RandRange(0, 3);
 
 	switch (Side)
 	{
-	case 0: // Front Edge (X+)
+	case 0: // Front (X+)
 		SpawnLocation.X += Extent.X;
-		SpawnLocation.Y += FMath::RandRange(-Extent.Y, Extent.Y); // Random spot along the width
+		SpawnLocation.Y += FMath::RandRange(-Extent.Y, Extent.Y);
 		break;
-
-	case 1: // Back Edge (X-)
+	case 1: // Back (X-)
 		SpawnLocation.X -= Extent.X;
 		SpawnLocation.Y += FMath::RandRange(-Extent.Y, Extent.Y);
 		break;
-
-	case 2: // Right Edge (Y+)
-		SpawnLocation.X += FMath::RandRange(-Extent.X, Extent.X); // Random spot along the length
+	case 2: // Right (Y+)
+		SpawnLocation.X += FMath::RandRange(-Extent.X, Extent.X);
 		SpawnLocation.Y += Extent.Y;
 		break;
-
-	case 3: // Left Edge (Y-)
+	case 3: // Left (Y-)
 		SpawnLocation.X += FMath::RandRange(-Extent.X, Extent.X);
 		SpawnLocation.Y -= Extent.Y;
 		break;
 	}
-	
-	FVector DirectionToCenter = Origin - SpawnLocation;
-	FRotator SpawnRotation = DirectionToCenter.Rotation();
 
-	UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>();
-
-	if (Pool)
-	{
-		AActor* spawnedObstacle = Pool->GetActorFromPool(ObstacleClass, SpawnLocation, SpawnRotation);
-		if (spawnedObstacle->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass())) return;
-		{
-			IPoolableInterface::Execute_OnSpawnFromPool(spawnedObstacle);
-		}
-	}
+	return SpawnLocation;
 }
