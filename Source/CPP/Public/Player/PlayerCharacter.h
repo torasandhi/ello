@@ -10,7 +10,7 @@
 class UInputMappingContext;
 class UInputAction;
 class UCapsuleComponent;
-class UStaticMeshComponent;
+class USkeletalMeshComponent;
 struct FInputActionValue;
 	
 UENUM(BlueprintType)
@@ -52,7 +52,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCapsuleComponent* CapsuleComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UStaticMeshComponent* PlayerMesh;
+	USkeletalMeshComponent* PlayerMesh;
 
 	virtual void BeginPlay() override;
 	void InputMove(const FInputActionValue& value);

@@ -5,6 +5,7 @@
 
 #include "ObjectPoolSubsystem.h"
 #include "Components/CapsuleComponent.h"
+#include "CPP/CPP.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -69,9 +70,10 @@ void ABaseEnemy::MoveTowardsTarget(float DeltaTime)
 	if (distance > stopDistance)
 	{
 		FVector forwardDirection = GetActorForwardVector();
-		FVector deltaLocation = (forwardDirection * MoveSpeed) + (CurrentPushVelocity * DeltaTime);
-
-		AddActorWorldOffset(deltaLocation, true);
+		FVector StepMove = (forwardDirection * MoveSpeed * DeltaTime);
+		FVector StepPush = (CurrentPushVelocity * DeltaTime);
+		
+		AddActorWorldOffset(StepMove + StepPush, true);
 	}
 	else
 	{

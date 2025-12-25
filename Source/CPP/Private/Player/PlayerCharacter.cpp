@@ -20,9 +20,9 @@ APlayerCharacter::APlayerCharacter(): InputMappingContext(nullptr), IA_Move(null
 	CapsuleComponent->InitCapsuleSize(40.0f, 90.0f); 
 	CapsuleComponent->SetCollisionProfileName(TEXT("Pawn")); 
 
-	PlayerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlayerMesh"));
+	PlayerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PlayerMesh"));
 	PlayerMesh->SetupAttachment(RootComponent);
-	PlayerMesh->SetCollisionProfileName(TEXT("NoCollision")); // Let the Capsule handle collision!
+	PlayerMesh->SetCollisionProfileName(TEXT("NoCollision"));
 }
 
 float APlayerCharacter::GetSpeed() const { return MoveSpeed; }
