@@ -63,12 +63,13 @@ void ASpawnerManager::SpawnEnemies() const
 	if (!EnemyClass) return;
 
 	FVector SpawnLocation = GetRandomSpawnPointAtEdgePos();
-	PRINT_DEBUG_MESSAGE(GetRandomSpawnPointAtEdgePos().ToString());
-	
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
-		// AActor* SpawnedEnemy =
-		 Pool->GetActorFromPool(EnemyClass, SpawnLocation, FRotator::ZeroRotator);
+		AActor* SpawnedEnemy = Pool->GetActorFromPool(EnemyClass, SpawnLocation, FRotator::ZeroRotator);
+		if (SpawnedEnemy->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
+		{
+			IPoolableInterface::Execute_OnSpawnFromPool(SpawnedEnemy);
+		}
 	}
 }
 

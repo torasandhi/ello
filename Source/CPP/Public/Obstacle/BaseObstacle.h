@@ -16,7 +16,7 @@ public:
 	ABaseObstacle();
 
 	virtual void Tick(float DeltaTime) override;
-	void OnSpawnFromPool_Implementation() override;
+	virtual void OnSpawnFromPool_Implementation() override;
 
 protected:
 	FTimerHandle ReturnToPoolTImer;

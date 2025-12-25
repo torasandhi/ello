@@ -8,7 +8,7 @@
 #include "BaseEnemy.generated.h"
 
 class UCapsuleComponent;
-class UStaticMeshComponent;
+class USkeletalMeshComponent;
 class UPrimitiveComponent;
 
 UENUM(BlueprintType)
@@ -39,35 +39,41 @@ protected:
 	                       bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse,
 	                       const FHitResult& Hit) override;
 	virtual void OnDeath();
+	virtual void OnSpawnFromPool_Implementation() override;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category= "Components")
 	UCapsuleComponent* CapsuleComponent;
 	UPROPERTY(VisibleAnywhere, Category= "Components")
-	UStaticMeshComponent* EnemyMesh;
+	USkeletalMeshComponent* EnemyMesh;
 
 	UPROPERTY(EditAnywhere, Category = "Stats")
 	int32 CurrentHealth = 600.f;
-	UPROPERTY(EditAnywhere, Category = "BaseStat")
+	UPROPERTY(VisibleAnywhere, Category = "BaseStat")
 	int32 BaseHealth = 600.f;
 
 	UPROPERTY(EditAnywhere, Category = "Stats")
 	float MoveSpeed = 10.f;
-	UPROPERTY(EditAnywhere, Category = "BaseStat")
-	float BaseMoveSpeed = 10.f;
+	UPROPERTY(VisibleAnywhere, Category = "BaseStat")
+	float BaseMoveSpeed = 600.f;
 
 	UPROPERTY(EditAnywhere, Category = "Stats")
 	float Damage = 10.f;
-	UPROPERTY(EditAnywhere, Category = "BaseStat")
+	UPROPERTY(VisibleAnywhere, Category = "BaseStat")
 	float BaseDamage = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = "Stats")
-	float TurnSpeed = 5.0f;
+	float TurnSpeed = 100.0f;
 
 	UPROPERTY(EditAnywhere, Category = "BaseStat")
 	float stopDistance;
 
-	UPROPERTY(VisibleAnywhere, Category = "BaseStat")
+	UPROPERTY(VisibleAnywhere, Category = "Physics")
+	float Gravity = -2500.f;
+	UPROPERTY(VisibleAnywhere, Category = "Physics")
+	float VerticalVelocity;
+
+	UPROPERTY(VisibleAnywhere, Category = "Target")
 	AActor* Target;
 	
 	EEnemyState CurrentState = EEnemyState::Chasing;

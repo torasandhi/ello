@@ -14,13 +14,19 @@ class UObjectPoolSubsystem;
 ABaseEnemy::ABaseEnemy() : stopDistance(10.0f), Target(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	MoveSpeed = BaseMoveSpeed;
+	CurrentHealth = BaseHealth;
+	Damage = BaseDamage;
+	
+	
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	RootComponent = CapsuleComponent;
 
 	CapsuleComponent->InitCapsuleSize(40.0f, 90.0f);
 	CapsuleComponent->SetCollisionProfileName(TEXT("Pawn"));
 
-	EnemyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlayerMesh"));
+	EnemyMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("EnemyMesh"));
 	EnemyMesh->SetupAttachment(RootComponent);
 	EnemyMesh->SetCollisionProfileName(TEXT("NoCollision")); // Let the Capsule handle collision!
 }
@@ -61,27 +67,40 @@ void ABaseEnemy::LookAtTarget(float DeltaTime)
 
 void ABaseEnemy::MoveTowardsTarget(float DeltaTime)
 {
-	if (!Target) return;
+    if (!Target) return;
+    
+    CurrentPushVelocity = FMath::VInterpTo(CurrentPushVelocity, FVector::ZeroVector, DeltaTime, PushFriction);
+    float distance = FVector::Dist(GetActorLocation(), Target->GetActorLocation());
 
-	CurrentPushVelocity = FMath::VInterpTo(CurrentPushVelocity, FVector::ZeroVector, DeltaTime, PushFriction);
+    if (distance > stopDistance || !CurrentPushVelocity.IsNearlyZero())
+    {
+        FVector ForwardMove = (distance > stopDistance) ? (GetActorForwardVector() * MoveSpeed) : FVector::ZeroVector;
+    	FVector TotalMoveDelta = (ForwardMove + CurrentPushVelocity) * DeltaTime;
 
-	float distance = FVector::Dist(GetActorLocation(), Target->GetActorLocation());
+        FHitResult Hit;
+        AddActorWorldOffset(TotalMoveDelta, true, &Hit);
 
-	if (distance > stopDistance)
-	{
-		FVector forwardDirection = GetActorForwardVector();
-		FVector StepMove = (forwardDirection * MoveSpeed * DeltaTime);
-		FVector StepPush = (CurrentPushVelocity * DeltaTime);
-		
-		AddActorWorldOffset(StepMove + StepPush, true);
-	}
-	else
-	{
-		if (!CurrentPushVelocity.IsNearlyZero())
-		{
-			AddActorWorldOffset(CurrentPushVelocity * DeltaTime, true);
-		}
-	}
+        if (Hit.IsValidBlockingHit())
+        {
+            FVector SlideVector = FVector::VectorPlaneProject(TotalMoveDelta, Hit.Normal) * (1.0f - Hit.Time);
+            AddActorWorldOffset(SlideVector, true);
+        }
+    }
+	
+    VerticalVelocity += Gravity * DeltaTime; // e.g. -2000.0f
+    VerticalVelocity = FMath::Max(VerticalVelocity, -4000.0f);
+	FHitResult GravityHit;
+    AddActorWorldOffset(FVector(0, 0, VerticalVelocity * DeltaTime), true, &GravityHit);
+
+    // Land on Floor
+    if (GravityHit.IsValidBlockingHit())
+    {
+        // If surface points UP (Normal Z > 0.7), it's a floor.
+        if (GravityHit.Normal.Z > 0.7f)
+        {
+            VerticalVelocity = 0.0f;
+        }
+    }
 }
 
 void ABaseEnemy::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, class UPrimitiveComponent* OtherComp,
@@ -120,6 +139,14 @@ void ABaseEnemy::OnDeath()
 	{
 		Destroy();
 	}
+}
+
+void ABaseEnemy::OnSpawnFromPool_Implementation()
+{
+	IPoolableInterface::OnSpawnFromPool_Implementation();
+	MoveSpeed = BaseMoveSpeed;
+	CurrentHealth = BaseHealth;
+	Damage = BaseDamage;
 }
 
 void ABaseEnemy::Tick(float DeltaTime)

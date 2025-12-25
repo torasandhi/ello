@@ -17,12 +17,14 @@ APlayerCharacter::APlayerCharacter(): InputMappingContext(nullptr), IA_Move(null
 
 	RootComponent = CapsuleComponent;
 
-	CapsuleComponent->InitCapsuleSize(40.0f, 90.0f); 
-	CapsuleComponent->SetCollisionProfileName(TEXT("Pawn")); 
+	CapsuleComponent->InitCapsuleSize(40.0f, 90.0f);
+	CapsuleComponent->SetCollisionProfileName(TEXT("Pawn"));
 
 	PlayerMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("PlayerMesh"));
 	PlayerMesh->SetupAttachment(RootComponent);
 	PlayerMesh->SetCollisionProfileName(TEXT("NoCollision"));
+
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
 }
 
 float APlayerCharacter::GetSpeed() const { return MoveSpeed; }
@@ -48,14 +50,26 @@ void APlayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (!TargetDirection.IsZero())
 	{
-		FVector NewLocation = GetActorLocation() + (TargetDirection * MoveSpeed * DeltaTime);
-		SetActorLocation(NewLocation, true);
+		FVector DesiredMove = TargetDirection * MoveSpeed * DeltaTime;
+
+		FHitResult Hit;
+
+		AddActorWorldOffset(DesiredMove, true, &Hit);
+
+		if (Hit.IsValidBlockingHit())
+		{
+			float RemainingTime = 1.0f - Hit.Time;
+
+			FVector SlideVector = FVector::VectorPlaneProject(DesiredMove, Hit.Normal) * RemainingTime;
+
+			AddActorWorldOffset(SlideVector, true);
+		}
 
 		FRotator TargetRotation = TargetDirection.Rotation();
-
 		FRotator NewRotation = FMath::RInterpTo(GetActorRotation(), TargetRotation, DeltaTime, TurnSpeed);
 		SetActorRotation(NewRotation);
 	}
+	AddGravity(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -115,4 +129,20 @@ void APlayerCharacter::InputMove(const FInputActionValue& value)
 void APlayerCharacter::Attack(const FInputActionValue& value)
 {
 	PRINT_DEBUG_MESSAGE("Attacking");
+}
+
+void APlayerCharacter::AddGravity(float DeltaTime)
+{
+	VerticalVelocity += Gravity * DeltaTime;
+
+	FHitResult GravityHit;
+	AddActorWorldOffset(FVector(0, 0, VerticalVelocity* DeltaTime), true, &GravityHit);
+
+	if (GravityHit.IsValidBlockingHit())
+	{
+		if (GravityHit.Normal.Z > 0.7f)
+		{
+			VerticalVelocity = 0.0f;
+		}
+	}
 }

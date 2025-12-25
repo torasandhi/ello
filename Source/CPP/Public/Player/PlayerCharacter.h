@@ -51,14 +51,20 @@ protected:
 	UInputAction* IA_Attack;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCapsuleComponent* CapsuleComponent;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USkeletalMeshComponent* PlayerMesh;
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Physics")
+	float Gravity = -2500.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics")
+	float VerticalVelocity;
 
 	virtual void BeginPlay() override;
-	void InputMove(const FInputActionValue& value);
-	void Attack(const FInputActionValue& value);
 
 private:
 	FVector TargetDirection;
 	EPlayerState CurrentState = EPlayerState::Idle;
+
+	void InputMove(const FInputActionValue& value);
+	void Attack(const FInputActionValue& value);
+	void AddGravity(float DeltaTime);
 };
