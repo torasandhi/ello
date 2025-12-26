@@ -23,6 +23,6 @@ public:
 	void ReturnActorToPool(AActor* ActorToReturn);
 	
 private:
-	// Key = The Class Type, Value = The Array of pooled actors
 	TMap<UClass*, TArray<AActor*>> PoolDictionary;
 };
+	

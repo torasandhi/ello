@@ -1,0 +1,127 @@
+#include "Enemy/rglkEnemyCharacter.h"
+
+#include "KismetTraceUtils.h"
+#include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "ObjectPoolSubsystem.h"
+#include "CPP/CPP.h"
+
+ArglkEnemyCharacter::ArglkEnemyCharacter()
+{
+	// 1. Configure Movement
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 400.0f, 0.0f); // Turn speed
+
+	MoveSpeed = 400.0f;
+	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+
+	// 2. Configure Collision
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+}
+
+void ArglkEnemyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	FindTarget();
+}
+
+void ArglkEnemyCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (TargetActor)
+	{
+		ChaseTarget();
+	}
+	else
+	{
+		FindTarget();
+	}
+
+	if (!SeparationForce.IsZero())
+	{
+		AddMovementInput(SeparationForce, 1.0f);
+
+		SeparationForce = FMath::VInterpTo(SeparationForce, FVector::ZeroVector, DeltaTime, 5.0f);
+	}
+}
+
+void ArglkEnemyCharacter::FindTarget()
+{
+	TargetActor = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+}
+
+void ArglkEnemyCharacter::ChaseTarget()
+{
+	if (!TargetActor) return;
+	
+	float Distance = FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation());
+
+	// If outside stopping distance, Move
+	if (Distance > StopDistance)
+	{
+		FVector Direction = (TargetActor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+
+		// 2. Move!
+		// AddMovementInput uses the CharacterMovementComponent (handles gravity, slopes, etc).
+		AddMovementInput(Direction, 1.0f);
+	}
+	else
+	{
+		if (!WeaponComp) return;
+		Attack();
+	} 
+}
+
+void ArglkEnemyCharacter::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp,
+                                    bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse,
+                                    const FHitResult& Hit)
+{
+	Super::NotifyHit(MyComp, Other, OtherComp, bSelfMoved, HitLocation, HitNormal, NormalImpulse, Hit);
+
+	if (Other)
+	{
+		FVector PushDir = GetActorLocation() - Other->GetActorLocation();
+		PushDir.Z = 0; // Don't push up/down
+		PushDir.Normalize();
+
+		if (Other->ActorHasTag("Player"))
+		{
+			// Big push from player
+			SeparationForce += (PushDir * 2.0f);
+		}
+		else if (Other->ActorHasTag("Enemy"))
+		{
+			SeparationForce += (PushDir * 0.5f);
+		}
+	}
+}
+
+void ArglkEnemyCharacter::Die()
+{
+	Super::Die();
+
+	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+		Pool->ReturnActorToPool(this);
+}
+
+void ArglkEnemyCharacter::Attack()
+{
+	PRINT_DEBUG_MESSAGE("ENEMY IS ATTACKING");
+}
+
+// --- POOLING LOGIC --- //
+
+void ArglkEnemyCharacter::OnSpawnFromPool_Implementation()
+{
+	CurrentHealth = MaxHealth;
+	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+
+	SeparationForce = FVector::ZeroVector;
+	FindTarget();
+
+	// Ensure Physics is on
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+}

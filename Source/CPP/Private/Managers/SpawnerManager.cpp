@@ -46,30 +46,28 @@ void ASpawnerManager::SpawnObstacle() const
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
 		AActor* SpawnedObstacle = Pool->GetActorFromPool(ObstacleClass, SpawnLocation, SpawnRotation);
-
-		if (SpawnedObstacle)
+		if (!SpawnedObstacle) return;
+		if (SpawnedObstacle->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
 		{
-			// 5. Trigger the Interface (If obstacles use it for Timelines/Resets)
-			if (SpawnedObstacle->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
-			{
-				IPoolableInterface::Execute_OnSpawnFromPool(SpawnedObstacle);
-			}
+			IPoolableInterface::Execute_OnSpawnFromPool(SpawnedObstacle);
 		}
 	}
 }
 
-void ASpawnerManager::SpawnEnemies() const
+void ASpawnerManager::SpawnEnemies()
 {
 	if (!EnemyClass) return;
+	if (SpawnedEnemies.Num() + 1 > MaxEnemySpawned) return;
+
+	UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>();
+	if (!Pool) return;
 
 	FVector SpawnLocation = GetRandomSpawnPointAtEdgePos();
-	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+	AActor* SpawnedEnemy = Pool->GetActorFromPool(EnemyClass, SpawnLocation, FRotator::ZeroRotator);
+	if (SpawnedEnemy->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
 	{
-		AActor* SpawnedEnemy = Pool->GetActorFromPool(EnemyClass, SpawnLocation, FRotator::ZeroRotator);
-		if (SpawnedEnemy->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
-		{
-			IPoolableInterface::Execute_OnSpawnFromPool(SpawnedEnemy);
-		}
+		IPoolableInterface::Execute_OnSpawnFromPool(SpawnedEnemy);
+		SpawnedEnemies.Add(SpawnedEnemy);
 	}
 }
 
