@@ -21,6 +21,7 @@ public :
 	
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HealthBar;
@@ -31,5 +32,5 @@ private:
 	UFUNCTION()
 	void OnHealthChanged(float Current, float Max);
 	UFUNCTION()
-	void OnScoreChanged(FString NewScore);
+	void OnScoreChanged(int32 NewScore) const;
 };

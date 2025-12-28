@@ -4,7 +4,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "ObjectPoolSubsystem.h"
-#include "CPP/CPP.h"
+#include "Subsystem/Instance/ScoreSubsystem.h"
 
 ArglkEnemyCharacter::ArglkEnemyCharacter()
 {
@@ -101,6 +101,8 @@ void ArglkEnemyCharacter::Die()
 		Pool->ReturnActorToPool(this);
 		ReturnToPool.Broadcast(this);
 	}
+
+	GetGameInstance()->GetSubsystem<UScoreSubsystem>()->SetScore(1);
 }
 
 void ArglkEnemyCharacter::Attack()

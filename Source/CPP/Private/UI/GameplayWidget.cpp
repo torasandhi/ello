@@ -4,12 +4,12 @@
 #include "UI/GameplayWidget.h"
 #include "CPP/CPP.h"
 #include "Player/rglkPlayerCharacter.h"
-
-
+#include "Subsystem/Instance/ScoreSubsystem.h"
 
 void UGameplayWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
 	APawn* OwningPawn = GetOwningPlayerPawn();
 	if (ArglkPlayerCharacter* MyChar = Cast<ArglkPlayerCharacter>(OwningPawn))
 	{
@@ -21,15 +21,25 @@ void UGameplayWidget::NativeConstruct()
 	}
 }
 
+void UGameplayWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+	
+	UScoreSubsystem* SS = GetGameInstance()->GetSubsystem<UScoreSubsystem>();
+	SS->OnScoreChanged.RemoveAll(this);		
+}
+
 void UGameplayWidget::BindToPlayer(ArglkPlayerCharacter* Player)
 {
 	if (!Player) return;
-
 	Player->OnHealthChanged.AddDynamic(
 		this, &UGameplayWidget::OnHealthChanged
 	);
-	
 	OnHealthChanged(Player->GetHealthPercent() * Player->MaxHealth, Player->MaxHealth);
+
+	UScoreSubsystem* ScoreSubsystem =GetGameInstance()->GetSubsystem<UScoreSubsystem>();
+	ScoreSubsystem->OnScoreChanged.AddUObject(
+		this, &UGameplayWidget::OnScoreChanged);
 }
 
 void UGameplayWidget::OnHealthChanged(float Current, float Max)
@@ -37,7 +47,7 @@ void UGameplayWidget::OnHealthChanged(float Current, float Max)
 	HealthBar->SetPercent(Current / Max);
 }
 
-void UGameplayWidget::OnScoreChanged(FString NewScore)
+void UGameplayWidget::OnScoreChanged(int32 NewScore) const
 {
-	ScoreText->SetText(FText::FromString(NewScore));
+	ScoreText->SetText(FText::AsNumber(NewScore));
 }
