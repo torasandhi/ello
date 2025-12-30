@@ -5,6 +5,8 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputSubsystems.h"
 #include "ObjectPoolSubsystem.h"
+#include "Components/RangedWeaponComponent.h"
+#include "CPP/CPP.h"
 
 ArglkPlayerCharacter::ArglkPlayerCharacter()
 {
@@ -17,18 +19,20 @@ ArglkPlayerCharacter::ArglkPlayerCharacter()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	
-	CameraBoom->bUsePawnControlRotation = false; 
-	CameraBoom->bInheritPitch = false; 
-	CameraBoom->bInheritYaw = false;   
+
+	CameraBoom->bUsePawnControlRotation = false;
+	CameraBoom->bInheritPitch = false;
+	CameraBoom->bInheritYaw = false;
 	CameraBoom->bInheritRoll = false;
-	
+
 	CameraBoom->SetRelativeRotation(FRotator(-50.0f, 0.0f, 0.0f));
 	CameraBoom->TargetArmLength = 800.0f; // Distance from player
-	
+
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	RangedComp = CreateDefaultSubobject<URangedWeaponComponent>(TEXT("RangedWeaponComponent"));
 }
 
 void ArglkPlayerCharacter::BeginPlay()
@@ -39,7 +43,22 @@ void ArglkPlayerCharacter::BeginPlay()
 
 void ArglkPlayerCharacter::Attack()
 {
-	Super::Attack();
+	switch (AttackType)
+	{
+	default:
+
+		break;
+
+	case EAttackType::Melee:
+		if (!WeaponComp) return;
+		WeaponComp->PerformAttack();
+		break;
+
+	case EAttackType::Ranged:
+		if (!RangedComp) return;
+		RangedComp->PerformAttack();
+		break;
+	}
 }
 
 void ArglkPlayerCharacter::Die()
@@ -47,7 +66,7 @@ void ArglkPlayerCharacter::Die()
 	Super::Die();
 }
 
-void ArglkPlayerCharacter::Move(const FInputActionValue& Value)
+void ArglkPlayerCharacter::Execute_Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -63,15 +82,44 @@ void ArglkPlayerCharacter::Move(const FInputActionValue& Value)
 	}
 }
 
-void ArglkPlayerCharacter::Attack(const FInputActionValue& Value)
+void ArglkPlayerCharacter::Execute_Attack(const FInputActionValue& Value)
 {
-	if (!WeaponComp) return;	
-	
-	Attack();	
+	if (!WeaponComp) return;;
+
+	Attack();
+}
+
+void ArglkPlayerCharacter::Execute_Swap(const FInputActionValue& Value)
+{
+	if (TypeCount > 0)
+	{
+		CurrentTypeIndex++;
+
+		switch (CurrentTypeIndex)
+		{
+		default:
+			AttackType = EAttackType::Melee;
+			PRINT_DEBUG_MESSAGE("MELEE");
+			break;
+		case 1:
+			AttackType = EAttackType::Melee;
+			PRINT_DEBUG_MESSAGE("MELEE");
+			break;
+		case 2:
+			AttackType = EAttackType::Ranged;
+			PRINT_DEBUG_MESSAGE("RANGED");
+			break;
+		}
+
+		if (CurrentTypeIndex > TypeCount || CurrentTypeIndex == 0)
+		{
+			CurrentTypeIndex = 1;
+		}
+	}
 }
 
 float ArglkPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator, AActor* DamageCauser)
+                                       class AController* EventInstigator, AActor* DamageCauser)
 {
 	const float ActualDamage = Super::TakeDamage(
 		DamageAmount,

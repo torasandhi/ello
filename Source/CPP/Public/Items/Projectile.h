@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "UPoolableInterface.h"
 #include "GameFramework/Actor.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "Projectile.generated.h"
 
 class UProjectileMovementComponent;
@@ -17,24 +16,23 @@ class CPP_API AProjectile : public AActor, public IPoolableInterface
 
 public:
 	AProjectile();
-	virtual void Tick(float DeltaTime) override;
-	virtual FOnReturnedToPool& OnReturnedToPool() override;
-	
-protected:
-	virtual void BeginPlay() override;
-	virtual void SetObjectOwner(FString owner);
-	
-private:
-	UPROPERTY(EditAnywhere, Category = "Stats")
-	float speed = 10.f;
-	UPROPERTY(EditAnywhere, Category = "Stats")
-	float LifeTime = 5.f;
-	UProjectileMovementComponent* ProjectileMovement;
-	FTimerHandle ProjectileTimer;
 
-	FString  owner;
-	void InitVelocity(const FVector& Dir);
-	void ReturnSelfToPool();
+	virtual void Tick(float DeltaTime) override;
+	virtual void BeginPlay() override;
+
+	void Activate(const FVector& InDirection, AActor* Owner);
 	virtual void OnSpawnFromPool_Implementation() override;
+	virtual FOnReturnedToPool& OnReturnedToPool() override;
+
+	
+	UPROPERTY(EditDefaultsOnly, Category="Projectile Settings")
+	float Speed = 6000.f;
+	UPROPERTY(EditDefaultsOnly, Category="Projectile Settings")
+	float LifeTime = 2.f;
+
+	float AliveTime = 0.f;
+
+private:
+	FVector MoveDirection = FVector::ZeroVector;
 	FOnReturnedToPool ReturnToPool;
 };

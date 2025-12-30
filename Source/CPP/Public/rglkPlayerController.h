@@ -40,7 +40,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Actions")
 	UInputAction* AttackAction;
-	
+	UPROPERTY(EditDefaultsOnly, Category="Actions")
+	UInputAction* SwapUtilAction;
+
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<UUserWidget> UI_Main;
 
@@ -50,4 +52,5 @@ private:
 	/**OnActions*/
 	void OnAttackAction(const FInputActionValue& value);
 	void OnMoveAction(const FInputActionValue& value);
+	void OnSwapUtilAction(const FInputActionValue& value);
 };

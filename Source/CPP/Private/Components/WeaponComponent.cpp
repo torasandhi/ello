@@ -11,6 +11,12 @@ UWeaponComponent::UWeaponComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+	FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
 
 // Called when the game starts
 void UWeaponComponent::BeginPlay()
@@ -18,7 +24,7 @@ void UWeaponComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
-void UWeaponComponent::PerformAttack() const
+void UWeaponComponent::PerformAttack()
 {
 	AActor* Owner = GetOwner();
 	if (!Owner) return;
@@ -56,10 +62,4 @@ void UWeaponComponent::PerformAttack() const
 		);
 		UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 	}
-}
-
-void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                     FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }

@@ -10,6 +10,16 @@ class UInputMappingContext;
 class UInputAction;
 class UCameraComponent;
 class USpringArmComponent;
+class URangedWeaponComponent;
+
+UENUM(BlueprintType)
+enum class EAttackType : uint8
+{
+	Melee,
+	Ranged,
+
+	COUNT
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, CurrentHealth, float, MaxHealth);
 
@@ -30,8 +40,7 @@ protected:
 	virtual void Attack() override;
 	virtual void Die() override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	                         class AController* EventInstigator, AActor* DamageCauser) override;;
-
+	                         class AController* EventInstigator, AActor* DamageCauser) override;
 public:
 	/** Camera Boom: Positions the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
@@ -41,7 +50,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	UCameraComponent* FollowCamera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	URangedWeaponComponent* RangedComp;
+
 	/** Actions */
-	void Move(const FInputActionValue& Value);
-	void Attack(const FInputActionValue& Value);
+	void Execute_Move(const FInputActionValue& Value);
+	void Execute_Attack(const FInputActionValue& Value);
+	void Execute_Swap(const FInputActionValue& Value);
+	
+private:
+	EAttackType AttackType = EAttackType::Ranged;
+	int32 TypeCount = static_cast<int>(EAttackType::COUNT);
+	int32 CurrentTypeIndex = 0;
 };
+

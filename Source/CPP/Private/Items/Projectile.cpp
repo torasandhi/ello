@@ -6,10 +6,6 @@
 
 AProjectile::AProjectile()
 {
-	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(
-		TEXT("ProjectileMovement")
-	);
-
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -18,44 +14,66 @@ void AProjectile::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AProjectile::SetObjectOwner(FString newOwner)
+void AProjectile::Activate(const FVector& Direction, AActor* InOwner)
 {
-	owner = newOwner;
-}
-
-void AProjectile::InitVelocity(const FVector& Dir)
-{
-	ProjectileMovement->Velocity = Dir * speed;
-}
-
-void AProjectile::ReturnSelfToPool()
-{
-	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
-	{
-		Pool->ReturnActorToPool(this);
-	}
+	SetOwner(InOwner);                 
+	MoveDirection = Direction.GetSafeNormal();
+	AliveTime = 0.f;
 }
 
 void AProjectile::OnSpawnFromPool_Implementation()
 {
-	GetWorldTimerManager().ClearTimer(ProjectileTimer);
-
-	GetWorldTimerManager().SetTimer(
-		ProjectileTimer,
-		this,
-		&AProjectile::ReturnSelfToPool,
-		LifeTime,
-		false
-	);
-}
-
-
-void AProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	IPoolableInterface::OnSpawnFromPool_Implementation();
 }
 
 IPoolableInterface::FOnReturnedToPool& AProjectile::OnReturnedToPool()
 {
 	return ReturnToPool;
 }
+
+void AProjectile::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	AliveTime += DeltaTime;
+	if (AliveTime >= LifeTime)
+	{
+		if (UObjectPoolSubsystem* Pool =
+			GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+		{
+			Pool->ReturnActorToPool(this);
+		}
+		return;
+	}
+
+	const FVector Start = GetActorLocation();
+	const FVector End = Start + MoveDirection * Speed * DeltaTime;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(GetOwner());
+
+	if (GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	))
+	{
+		SetActorLocation(Hit.ImpactPoint);
+
+		if (UObjectPoolSubsystem* Pool =
+			GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
+		{
+			Pool->ReturnActorToPool(this);
+		}
+		return;
+	}
+
+	SetActorLocation(End);
+}
+
+
+// OnOverlapBegin -> ApplyDamage -> Return To Pool

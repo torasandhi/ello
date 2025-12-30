@@ -62,19 +62,17 @@ void ASpawnerManager::SpawnEnemies()
 	if (!Pool) return;
 
 	FVector SpawnLocation = GetRandomSpawnPointAtEdgePos();
-	AActor* SpawnedEnemy = Pool->GetActorFromPool(EnemyClass, SpawnLocation, FRotator::ZeroRotator);
-	if (SpawnedEnemy->GetClass()->ImplementsInterface(UPoolableInterface::StaticClass()))
-	{
-		if (!SpawnedEnemy->Implements<UPoolableInterface>()) return;
-		IPoolableInterface::Execute_OnSpawnFromPool(SpawnedEnemy);
-		IPoolableInterface* Poolable = Cast<IPoolableInterface>(SpawnedEnemy);
+	AActor* SpawnedActor = Pool->GetActorFromPool(EnemyClass, SpawnLocation, FRotator::ZeroRotator);
 
-		Poolable->OnReturnedToPool().AddUObject(
+	if (ArglkEnemyCharacter* SpawnedEnemy = static_cast<ArglkEnemyCharacter*>(SpawnedActor))
+	{
+		SpawnedEnemy->OnReturnedToPool().AddUObject(
 			this,
 			&ASpawnerManager::HandleActorReturnedToPool
 		);
-		
 		SpawnedEnemies.Add(SpawnedEnemy);
+		if (!SpawnedEnemy->Implements<UPoolableInterface>()) return;
+		IPoolableInterface::Execute_OnSpawnFromPool(SpawnedEnemy);
 	}
 }
 

@@ -14,3 +14,4 @@ float UScoreSubsystem::SetScore(float amount)
 	OnScoreChanged.Broadcast(CurrentScore);
 	return CurrentScore;
 }
+

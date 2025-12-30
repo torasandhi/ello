@@ -15,12 +15,9 @@ class CPP_API UWeaponComponent : public UActorComponent
 public:	
 	UWeaponComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void PerformAttack() const;
+	virtual void PerformAttack();
 protected:
 	virtual void BeginPlay() override;
-
-
-
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	float BaseDamage = 10.f;
 	UPROPERTY(EditAnywhere, Category = "Combat")

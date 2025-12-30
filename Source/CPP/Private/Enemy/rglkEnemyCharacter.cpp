@@ -119,7 +119,6 @@ void ArglkEnemyCharacter::OnSpawnFromPool_Implementation()
 	SeparationForce = FVector::ZeroVector;
 	FindTarget();
 
-	// Ensure Physics is on
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 }

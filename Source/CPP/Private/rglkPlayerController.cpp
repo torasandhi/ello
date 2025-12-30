@@ -29,6 +29,7 @@ void ArglkPlayerController::SetupInputComponent()
 	{
 		EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnMoveAction);
 		EIC->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnAttackAction);
+		EIC->BindAction(SwapUtilAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnSwapUtilAction);
 	}
 }
 
@@ -74,7 +75,7 @@ void ArglkPlayerController::OnMoveAction(const FInputActionValue& value)
 {
 	if (ArglkPlayerCharacter* PC = GetPawn<ArglkPlayerCharacter>())
 	{
-		PC->Move(value);
+		PC->Execute_Move(value);
 	}
 }
 
@@ -82,6 +83,14 @@ void ArglkPlayerController::OnAttackAction(const FInputActionValue& value)
 {
 	if (ArglkPlayerCharacter* PC = GetPawn<ArglkPlayerCharacter>())
 	{
-		PC->Attack(value);
+		PC->Execute_Attack(value);
+	}
+}
+
+void ArglkPlayerController::OnSwapUtilAction(const FInputActionValue& value)
+{
+	if (ArglkPlayerCharacter* PC = GetPawn<ArglkPlayerCharacter>())
+	{
+		PC->Execute_Swap(value);
 	}
 }
