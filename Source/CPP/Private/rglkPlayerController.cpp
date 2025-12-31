@@ -14,11 +14,13 @@ void ArglkPlayerController::BeginPlay()
 	Super::BeginPlay();
 	SetInputState(EInputState::Gameplay);
 
-	UMainWidget* UI = CreateWidget<UMainWidget>(this, UI_Main);
-	UI->AddToViewport();
-	if (UI)
+	MainWidget = CreateWidget<UMainWidget>(this,UI_Main);
+	MainWidget->AddToViewport();
+	if (MainWidget)
 	{
-		UI->WBP_Gameplay->SetVisibility(ESlateVisibility::Visible);
+		MainWidget->WBP_MainMenu->SetVisibility(ESlateVisibility::Visible);
+		PRINT_DEBUG_MESSAGE("ISCALLED");
+		MainWidget->WBP_Gameplay->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 

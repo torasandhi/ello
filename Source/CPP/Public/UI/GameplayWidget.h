@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WidgetInterface.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
@@ -12,17 +13,16 @@
  * 
  */
 UCLASS()
-class CPP_API UGameplayWidget : public UUserWidget
+class CPP_API UGameplayWidget : public UUserWidget, public IWidgetInterface
 {
 	GENERATED_BODY()
 
 public :
 	void BindToPlayer(class ArglkPlayerCharacter* Player);
+	virtual void OnShowWidget_Implementation() override;
+	virtual void OnHideWidget_Implementation() override;
 	
 protected:
-	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
-	
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HealthBar;
 	UPROPERTY(meta = (BindWidget))

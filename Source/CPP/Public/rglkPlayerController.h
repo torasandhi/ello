@@ -8,6 +8,7 @@
 #include "GameFramework/PlayerController.h"
 #include "rglkPlayerController.generated.h"
 
+class UMainWidget;
 class UInputMappingContext;
 class UInputAction;
 
@@ -28,6 +29,12 @@ public:
 	virtual void SetupInputComponent() override;
 	void SetInputState(EInputState NewState);
 
+
+	UPROPERTY(EditDefaultsOnly, Category="UI")
+	TSubclassOf<UUserWidget> UI_Main;
+	UPROPERTY(EditDefaultsOnly, Category="UI")
+	UMainWidget* MainWidget;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	UInputMappingContext* GameplayContext;
@@ -42,9 +49,6 @@ protected:
 	UInputAction* AttackAction;
 	UPROPERTY(EditDefaultsOnly, Category="Actions")
 	UInputAction* SwapUtilAction;
-
-	UPROPERTY(EditDefaultsOnly, Category="UI")
-	TSubclassOf<UUserWidget> UI_Main;
 
 private:
 	EInputState CurrentState = EInputState::UI;

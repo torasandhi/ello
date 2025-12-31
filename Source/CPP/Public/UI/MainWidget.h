@@ -14,4 +14,6 @@ class CPP_API UMainWidget : public UUserWidget
 public:
 	UPROPERTY(meta = (BindWidget))
 	class UWidget* WBP_Gameplay;
+	UPROPERTY(meta = (BindWidget))
+	class UWidget* WBP_MainMenu;
 };

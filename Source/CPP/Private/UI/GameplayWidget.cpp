@@ -6,10 +6,9 @@
 #include "Player/rglkPlayerCharacter.h"
 #include "Subsystem/Instance/ScoreSubsystem.h"
 
-void UGameplayWidget::NativeConstruct()
+void UGameplayWidget::OnShowWidget_Implementation()
 {
-	Super::NativeConstruct();
-
+	SetVisibility(ESlateVisibility::Visible);
 	APawn* OwningPawn = GetOwningPlayerPawn();
 	if (ArglkPlayerCharacter* MyChar = Cast<ArglkPlayerCharacter>(OwningPawn))
 	{
@@ -21,12 +20,11 @@ void UGameplayWidget::NativeConstruct()
 	}
 }
 
-void UGameplayWidget::NativeDestruct()
+void UGameplayWidget::OnHideWidget_Implementation()
 {
-	Super::NativeDestruct();
-	
+	SetVisibility(ESlateVisibility::Collapsed);
 	UScoreSubsystem* SS = GetGameInstance()->GetSubsystem<UScoreSubsystem>();
-	SS->OnScoreChanged.RemoveAll(this);		
+	SS->OnScoreChanged.RemoveAll(this);
 }
 
 void UGameplayWidget::BindToPlayer(ArglkPlayerCharacter* Player)
@@ -37,10 +35,11 @@ void UGameplayWidget::BindToPlayer(ArglkPlayerCharacter* Player)
 	);
 	OnHealthChanged(Player->GetHealthPercent() * Player->MaxHealth, Player->MaxHealth);
 
-	UScoreSubsystem* ScoreSubsystem =GetGameInstance()->GetSubsystem<UScoreSubsystem>();
+	UScoreSubsystem* ScoreSubsystem = GetGameInstance()->GetSubsystem<UScoreSubsystem>();
 	ScoreSubsystem->OnScoreChanged.AddUObject(
 		this, &UGameplayWidget::OnScoreChanged);
 }
+
 
 void UGameplayWidget::OnHealthChanged(float Current, float Max)
 {
