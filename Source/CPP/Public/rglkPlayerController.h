@@ -26,6 +26,7 @@ class CPP_API ArglkPlayerController : public APlayerController
 
 public:
 	virtual void BeginPlay() override;
+	virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;
 	void SetInputState(EInputState NewState);
 
@@ -38,23 +39,27 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	UInputMappingContext* GameplayContext;
-
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	UInputMappingContext* UIContext;
-
 	UPROPERTY(EditDefaultsOnly, Category="Actions")
 	UInputAction* MoveAction;
-
+	UPROPERTY(EditDefaultsOnly, Category="Actions")
+	UInputAction* StickAimAction;
 	UPROPERTY(EditDefaultsOnly, Category="Actions")
 	UInputAction* AttackAction;
 	UPROPERTY(EditDefaultsOnly, Category="Actions")
 	UInputAction* SwapUtilAction;
+	UPROPERTY(EditDefaultsOnly, Category="Actions")
+	UInputAction* CheckMouseAction;	
 
 private:
 	EInputState CurrentState = EInputState::Gameplay;
-
+	bool bUseMouseAim = false;
 	/**OnActions*/
 	void OnAttackAction(const FInputActionValue& value);
 	void OnMoveAction(const FInputActionValue& value);
 	void OnSwapUtilAction(const FInputActionValue& value);
+	void OnStickAimAction(const FInputActionValue& value);
+	void OnMouseMove(const FInputActionValue& value);
+	void OnUpdateMouseAim();
 };

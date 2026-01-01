@@ -1,7 +1,7 @@
 #include "Components/RangedWeaponComponent.h"
-#include "Components/ArrowComponent.h"
 #include "ObjectPoolSubsystem.h"
 #include "Items/Projectile.h"
+#include "Player/rglkPlayerCharacter.h"
 
 void URangedWeaponComponent::BeginPlay()
 {
@@ -13,8 +13,10 @@ void URangedWeaponComponent::PerformAttack()
 	AActor* Owner = GetOwner();
 	if (!Owner || !GetWorld()) return;
 
-	const FVector Start = ArrowComponent ? ArrowComponent->GetComponentLocation() : Owner->GetActorLocation();
-	FVector ForwardDir = ArrowComponent ? ArrowComponent->GetForwardVector() : Owner->GetActorForwardVector();
+	USceneComponent* FirePoint = GetOwner<ArglkPlayerCharacter>()->FirePointComponent;
+
+	const FVector Start = FirePoint ? FirePoint->GetComponentLocation() : Owner->GetActorLocation();
+	FVector ForwardDir = FirePoint ? FirePoint->GetForwardVector() : Owner->GetActorForwardVector();
 	ForwardDir.Z = 0.f;
 	ForwardDir.Normalize();
 	const FVector End = Start + ForwardDir * TraceDistance;
@@ -31,7 +33,7 @@ void URangedWeaponComponent::PerformAttack()
 		Params
 	);
 
-	// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.0f, 0, 3.0f);
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.0f, 0, 3.0f);
 
 	const FVector Target = bHit ? Hit.ImpactPoint : End;
 	const FRotator ProjectileRot = (Target - Start).Rotation();
@@ -47,7 +49,7 @@ void URangedWeaponComponent::PerformAttack()
 				this,
 				&URangedWeaponComponent::HandleActorReturnToPool
 			);
-			
+
 			if (!SpawnedProjectile->Implements<UPoolableInterface>()) return;
 			IPoolableInterface::Execute_OnSpawnFromPool(SpawnedProjectile);
 		}

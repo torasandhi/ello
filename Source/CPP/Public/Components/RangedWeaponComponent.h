@@ -23,8 +23,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Weapons")
 	TSubclassOf<AActor> Projectile;
 	UPROPERTY(EditDefaultsOnly, Category="Weapons")
-	UArrowComponent* ArrowComponent;
-	UPROPERTY(EditDefaultsOnly, Category="Weapons")
 	float TraceDistance;
 
 private:

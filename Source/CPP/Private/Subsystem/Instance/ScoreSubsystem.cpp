@@ -3,6 +3,8 @@
 
 #include "Subsystem/Instance/ScoreSubsystem.h"
 
+#include "CPP/CPP.h"
+
 float UScoreSubsystem::GetScore() const
 {
 	return CurrentScore;

@@ -1,21 +1,14 @@
 #include "ObjectPoolSubsystem.h"
 
-#include "UPoolableInterface.h"
-
-
 void UObjectPoolSubsystem::InitializePoolsFromAsset(UMyPoolConfig* Config)
 {
     if (!Config) return;
 
-    // Iterate through every pool defined in the Data Asset
     for (const FPoolDefinition& PoolDef : Config->poolDefinitions)
     {
         if (!PoolDef.actorClass) continue;
 
-        // Create the entry in our Dictionary
         TArray<AActor*>& ActorList = PoolDictionary.FindOrAdd(PoolDef.actorClass);
-
-        // Spawn the actors
         for (int32 i = 0; i < PoolDef.warmupPoolSize; i++)
         {
             AActor* NewActor = GetWorld()->SpawnActor<AActor>(PoolDef.actorClass, FVector::ZeroVector, FRotator::ZeroRotator);
@@ -25,7 +18,7 @@ void UObjectPoolSubsystem::InitializePoolsFromAsset(UMyPoolConfig* Config)
                 NewActor->SetActorEnableCollision(false);
                 NewActor->SetActorTickEnabled(false);
                 ActorList.Add(NewActor);
-            }
+            }   
         }
     }
 }

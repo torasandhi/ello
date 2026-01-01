@@ -11,6 +11,7 @@ class UInputAction;
 class UCameraComponent;
 class USpringArmComponent;
 class URangedWeaponComponent;
+class USceneComponent;
 
 UENUM(BlueprintType)
 enum class EAttackType : uint8
@@ -34,6 +35,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnHealthChanged OnHealthChanged;
 	float GetHealthPercent() const;
+	void Execute_AimAtMousePos(const FVector& WorldPos);
 
 protected:
 	virtual void BeginPlay() override;
@@ -41,26 +43,26 @@ protected:
 	virtual void Die() override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
+
 public:
-	/** Camera Boom: Positions the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	USpringArmComponent* CameraBoom;
-
-	/** Follow Camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	UCameraComponent* FollowCamera;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	URangedWeaponComponent* RangedComp;
-
-	/** Actions */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USceneComponent* AimingComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USceneComponent* FirePointComponent;
+	
 	void Execute_Move(const FInputActionValue& Value);
 	void Execute_Attack(const FInputActionValue& Value);
 	void Execute_Swap(const FInputActionValue& Value);
-	
+	void Execute_AimStick(const FInputActionValue& Value);
+
 private:
 	EAttackType AttackType = EAttackType::Ranged;
 	int32 TypeCount = static_cast<int>(EAttackType::COUNT);
 	int32 CurrentTypeIndex = 0;
 };
-

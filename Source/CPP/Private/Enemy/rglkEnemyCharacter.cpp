@@ -4,18 +4,19 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "ObjectPoolSubsystem.h"
+#include "CPP/CPP.h"
 #include "Subsystem/Instance/ScoreSubsystem.h"
 
 ArglkEnemyCharacter::ArglkEnemyCharacter()
 {
-	// 1. Configure Movement
+	// Configure Movement
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 400.0f, 0.0f); // Turn speed
 
 	MoveSpeed = 400.0f;
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 
-	// 2. Configure Collision
+	// Configure Collision
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
 }
 
@@ -94,15 +95,14 @@ void ArglkEnemyCharacter::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, 
 
 void ArglkEnemyCharacter::Die()
 {
-	Super::Die();
-
+	if (bIsDead) return;
+	bIsDead = true;
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
 		Pool->ReturnActorToPool(this);
 		ReturnToPool.Broadcast(this);
+		GetGameInstance()->GetSubsystem<UScoreSubsystem>()->SetScore(1);
 	}
-
-	GetGameInstance()->GetSubsystem<UScoreSubsystem>()->SetScore(1);
 }
 
 void ArglkEnemyCharacter::Attack()
@@ -113,9 +113,9 @@ void ArglkEnemyCharacter::Attack()
 
 void ArglkEnemyCharacter::OnSpawnFromPool_Implementation()
 {
-	CurrentHealth = MaxHealth;
+	ApplyBaseStats();
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
-
+	bIsDead = false;
 	SeparationForce = FVector::ZeroVector;
 	FindTarget();
 
@@ -124,7 +124,7 @@ void ArglkEnemyCharacter::OnSpawnFromPool_Implementation()
 }
 
 
-// Refactor to 1 class per state
+// Refactor to 1 class per state (imma do this when i have time)
 // -- Handle States --
 
 void ArglkEnemyCharacter::SetState(EEnemyState NewState)
@@ -219,15 +219,15 @@ void ArglkEnemyCharacter::UpdateAttack(float DeltaTime)
 }
 
 float ArglkEnemyCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator, AActor* DamageCauser)
+                                      class AController* EventInstigator, AActor* DamageCauser)
 {
-	const float ActualDamage =  Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	CurrentHealth -= ActualDamage;
 	if (CurrentHealth <= 0)
 	{
 		Die();
 	}
-	
+
 	return ActualDamage;
 }

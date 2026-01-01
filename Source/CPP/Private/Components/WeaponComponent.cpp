@@ -2,6 +2,8 @@
 
 
 #include "Components/WeaponComponent.h"
+
+#include "rglkCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -22,6 +24,7 @@ void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 void UWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	BaseDamage = GetOwner<ArglkCharacter>()->BaseDamage;
 }
 
 void UWeaponComponent::PerformAttack()

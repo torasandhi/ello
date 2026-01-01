@@ -14,14 +14,21 @@ void ArglkPlayerController::BeginPlay()
 	Super::BeginPlay();
 	SetInputState(EInputState::UI);
 
-	MainWidget = CreateWidget<UMainWidget>(this,UI_Main);
+	MainWidget = CreateWidget<UMainWidget>(this, UI_Main);
 	MainWidget->AddToViewport();
 	if (MainWidget)
 	{
 		MainWidget->WBP_MainMenu->SetVisibility(ESlateVisibility::Visible);
-		PRINT_DEBUG_MESSAGE("ISCALLED");
 		MainWidget->WBP_Gameplay->SetVisibility(ESlateVisibility::Collapsed);
 	}
+}
+
+void ArglkPlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
+
+	if (!bUseMouseAim) return;
+	OnUpdateMouseAim();
 }
 
 void ArglkPlayerController::SetupInputComponent()
@@ -32,6 +39,9 @@ void ArglkPlayerController::SetupInputComponent()
 		EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnMoveAction);
 		EIC->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnAttackAction);
 		EIC->BindAction(SwapUtilAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnSwapUtilAction);
+		EIC->BindAction(StickAimAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnStickAimAction);
+		EIC->BindAction(CheckMouseAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnMouseMove);
+
 	}
 }
 
@@ -59,8 +69,10 @@ void ArglkPlayerController::SetInputState(EInputState NewState)
 	{
 	case EInputState::Gameplay:
 		Subsystem->AddMappingContext(GameplayContext, 0);
-		SetInputMode(FInputModeGameOnly());
-		bShowMouseCursor = false;
+		SetInputMode(FInputModeGameAndUI());
+		bShowMouseCursor = true;
+		bEnableClickEvents = true;
+		bEnableMouseOverEvents = true;
 		break;
 
 	case EInputState::UI:
@@ -75,24 +87,64 @@ void ArglkPlayerController::SetInputState(EInputState NewState)
 
 void ArglkPlayerController::OnMoveAction(const FInputActionValue& value)
 {
-	if (ArglkPlayerCharacter* PC = GetPawn<ArglkPlayerCharacter>())
+	if (CurrentState != EInputState::Gameplay) return;
+	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
 	{
-		PC->Execute_Move(value);
+		PCharacter->Execute_Move(value);
 	}
 }
 
 void ArglkPlayerController::OnAttackAction(const FInputActionValue& value)
 {
-	if (ArglkPlayerCharacter* PC = GetPawn<ArglkPlayerCharacter>())
+	if (CurrentState != EInputState::Gameplay) return;
+	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
 	{
-		PC->Execute_Attack(value);
+		PCharacter->Execute_Attack(value);
 	}
 }
 
 void ArglkPlayerController::OnSwapUtilAction(const FInputActionValue& value)
 {
-	if (ArglkPlayerCharacter* PC = GetPawn<ArglkPlayerCharacter>())
+
+	if (CurrentState != EInputState::Gameplay) return;
+	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
 	{
-		PC->Execute_Swap(value);
+		PCharacter->Execute_Swap(value);
+	}
+}
+
+void ArglkPlayerController::OnStickAimAction(const FInputActionValue& value)
+{
+	bUseMouseAim = false;
+	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
+	{
+		PCharacter->Execute_AimStick(value);
+	}
+}
+
+void ArglkPlayerController::OnMouseMove(const FInputActionValue& value)
+{
+	bUseMouseAim = true;
+}
+
+void ArglkPlayerController::OnUpdateMouseAim()
+{
+	if (CurrentState != EInputState::Gameplay)
+		return;
+	FVector WorldOrigin, WorldDirection;
+	if (!DeprojectMousePositionToWorld(WorldOrigin, WorldDirection))
+		return;
+	APawn* MyPawn = GetPawn();
+	if (!MyPawn)
+		return;
+
+	const float PlaneZ = MyPawn->GetActorLocation().Z;
+	const float T = (PlaneZ - WorldOrigin.Z) / WorldDirection.Z;
+
+	const FVector AimPoint = WorldOrigin + WorldDirection * T;
+
+	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
+	{
+		PCharacter->Execute_AimAtMousePos(AimPoint);
 	}
 }

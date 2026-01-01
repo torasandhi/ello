@@ -16,8 +16,6 @@ void UGameplayWidget::OnShowWidget_Implementation()
 	}
 	else
 	{
-		PRINT_DEBUG_MESSAGE("GameplayWidget: Player not ready, starting search loop...");
-
 		if (GetWorld())
 		{
 			GetWorld()->GetTimerManager().SetTimer(

@@ -5,6 +5,7 @@
 #include "rglkCharacter.generated.h"
 
 class UWeaponComponent;
+struct FDataTableRowHandle;
 
 UCLASS()
 class CPP_API ArglkCharacter : public ACharacter
@@ -19,20 +20,21 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	// --- SHARED STATS --- //
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MaxHealth = 100.0f;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-	float CurrentHealth;
-
+	float CurrentHealth = 100.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	float BaseDamage = 10.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MoveSpeed = 600.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character State")
+	bool bIsDead = false;
+	
+	void ApplyBaseStats(const TCHAR* DebugString = TEXT("ApplyBaseStats"));
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UWeaponComponent* WeaponComp;
-	
-	// --- SHARED ACTIONS --- //
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	virtual void Attack();
@@ -40,9 +42,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	virtual void Die();
 
+
 	virtual float TakeDamage(
 		float DamageAmount,
 		FDamageEvent const& DamageEvent,
 		AController* EventInstigator,
 		AActor* DamageCauser) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stats")
+	FDataTableRowHandle CharacterStats;
 };

@@ -32,12 +32,21 @@ ArglkPlayerCharacter::ArglkPlayerCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
+	AimingComponent = CreateDefaultSubobject<USceneComponent>(TEXT("AimingComponent"));
+	AimingComponent->SetupAttachment(RootComponent);
+	AimingComponent->SetUsingAbsoluteRotation(true);
+	
+	FirePointComponent = CreateDefaultSubobject<USceneComponent>(TEXT("FirePointComponent"));
+	FirePointComponent->SetupAttachment(AimingComponent);
+	FirePointComponent->SetRelativeLocation(FVector(67.67f, 0.0f, 0.0f));
+	
 	RangedComp = CreateDefaultSubobject<URangedWeaponComponent>(TEXT("RangedWeaponComponent"));
 }
 
 void ArglkPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	ApplyBaseStats(TEXT("Player"));
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
@@ -66,6 +75,7 @@ void ArglkPlayerCharacter::Die()
 	Super::Die();
 }
 
+
 void ArglkPlayerCharacter::Execute_Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
@@ -81,6 +91,27 @@ void ArglkPlayerCharacter::Execute_Move(const FInputActionValue& Value)
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
+
+void ArglkPlayerCharacter::Execute_AimStick(const FInputActionValue& Value)
+{
+	const FVector2D Aim = Value.Get<FVector2D>();
+	if (Aim.IsNearlyZero()) return;
+
+	const float Angle = FMath::Atan2(Aim.Y, Aim.X);
+	const FRotator Rot(0.f, FMath::RadiansToDegrees(Angle), 0.f);
+
+	AimingComponent->SetRelativeRotation(Rot);
+}
+
+
+void ArglkPlayerCharacter::Execute_AimAtMousePos(const FVector& WorldPos)
+{
+	const FVector Dir = (WorldPos - AimingComponent->GetComponentLocation()).GetSafeNormal();
+	const FRotator Rot = Dir.Rotation();
+
+	AimingComponent->SetWorldRotation(FRotator(0.f, Rot.Yaw, 0.f));
+}
+
 
 void ArglkPlayerCharacter::Execute_Attack(const FInputActionValue& Value)
 {
@@ -118,6 +149,8 @@ void ArglkPlayerCharacter::Execute_Swap(const FInputActionValue& Value)
 	}
 }
 
+
+
 float ArglkPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
                                        class AController* EventInstigator, AActor* DamageCauser)
 {
@@ -132,7 +165,7 @@ float ArglkPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent c
 	if (CurrentHealth <= 0)
 	{
 		Die();
-		CurrentHealth = MaxHealth;
+		ApplyBaseStats();
 	}
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 	return ActualDamage;
