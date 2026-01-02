@@ -6,11 +6,6 @@
 #include "Components/WeaponComponent.h"
 #include "RangedWeaponComponent.generated.h"
 
-/**
- * 
- */
-class UArrowComponent;
-
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CPP_API URangedWeaponComponent : public UWeaponComponent
 {

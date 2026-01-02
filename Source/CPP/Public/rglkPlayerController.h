@@ -50,11 +50,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Actions")
 	UInputAction* SwapUtilAction;
 	UPROPERTY(EditDefaultsOnly, Category="Actions")
-	UInputAction* CheckMouseAction;	
+	UInputAction* CheckMouseAction;
 
 private:
 	EInputState CurrentState = EInputState::Gameplay;
-	bool bUseMouseAim = false;
+	bool bUseMouseAim = true;
 	/**OnActions*/
 	void OnAttackAction(const FInputActionValue& value);
 	void OnMoveAction(const FInputActionValue& value);

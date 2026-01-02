@@ -53,9 +53,7 @@ public:
 	URangedWeaponComponent* RangedComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USceneComponent* AimingComponent;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	USceneComponent* FirePointComponent;
-	
+
 	void Execute_Move(const FInputActionValue& Value);
 	void Execute_Attack(const FInputActionValue& Value);
 	void Execute_Swap(const FInputActionValue& Value);

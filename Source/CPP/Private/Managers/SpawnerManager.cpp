@@ -37,9 +37,9 @@ void ASpawnerManager::SpawnObstacle() const
 	FVector SpawnLocation = GetRandomSpawnPointAtEdgePos();
 
 	// 3. Calculate Rotation (Face Center)
-	FVector Origin = SpawnArea->GetComponentLocation();
-	FVector DirectionToCenter = Origin - SpawnLocation;
-	FRotator SpawnRotation = DirectionToCenter.Rotation();
+	const FVector Origin = SpawnArea->GetComponentLocation();
+	const FVector DirectionToCenter = Origin - SpawnLocation;
+	const FRotator SpawnRotation = DirectionToCenter.Rotation();
 
 	// 4. Get from Pool
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())

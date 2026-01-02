@@ -3,13 +3,23 @@
 #include "CoreMinimal.h"
 #include "rglkCharacter.h"
 #include "UPoolableInterface.h"
+#include "Components/RangedWeaponComponent.h"
 #include "rglkEnemyCharacter.generated.h"
 
 UENUM(BlueprintType)
 enum class EEnemyState : uint8
 {
 	Chasing UMETA(DisplayName="Chasing"),
-	Attacking UMETA(DisplayName="Attacking")
+	Attacking UMETA(DisplayName="Attacking"),
+};
+
+UENUM(BlueprintType)
+enum class EEnemyType : uint8
+{
+	Melee,
+	Ranged,
+
+	COUNT
 };
 
 UCLASS()
@@ -20,6 +30,8 @@ class CPP_API ArglkEnemyCharacter : public ArglkCharacter, public IPoolableInter
 public:
 	ArglkEnemyCharacter();
 	virtual FOnReturnedToPool& OnReturnedToPool() override;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	URangedWeaponComponent* RangedWeaponComp;
 
 protected:
 	virtual void BeginPlay() override;
@@ -29,7 +41,6 @@ protected:
 	                       const FHitResult& Hit) override;
 	virtual void Die() override;
 	virtual void Attack() override;
-
 	virtual void OnSpawnFromPool_Implementation() override;
 
 private:
@@ -37,6 +48,10 @@ private:
 	AActor* TargetActor;
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float StopDistance = 100.0f;
+	UPROPERTY(VisibleAnywhere, Category = "AI")
+	EEnemyState CurrentState = EEnemyState::Chasing;
+	UPROPERTY(EditDefaultsOnly, Category = "Type")
+	EEnemyType Type = EEnemyType::Melee;
 
 	FVector SeparationForce;
 	FTimerHandle AttackTimer;
@@ -45,15 +60,10 @@ private:
 	void FindTarget();
 	void ChaseTarget();
 	bool TimerManager(const FTimerHandle MyTimerHandle) const;
-
-	UPROPERTY(VisibleAnywhere, Category = "AI")
-	EEnemyState CurrentState = EEnemyState::Chasing;
-
 	void SetState(EEnemyState NewState);
 	void EnterState(EEnemyState State);
 	void ExitState(EEnemyState State);
 	void UpdateState(float DeltaTime);
-
 	void UpdateChase(float DeltaTime);
 	void UpdateAttack(float DeltaTime);
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,

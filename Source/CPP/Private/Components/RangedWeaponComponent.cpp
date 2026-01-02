@@ -10,10 +10,10 @@ void URangedWeaponComponent::BeginPlay()
 
 void URangedWeaponComponent::PerformAttack()
 {
-	AActor* Owner = GetOwner();
+	ArglkCharacter* Owner = GetOwner<ArglkCharacter>();
 	if (!Owner || !GetWorld()) return;
 
-	USceneComponent* FirePoint = GetOwner<ArglkPlayerCharacter>()->FirePointComponent;
+	USceneComponent* FirePoint = Owner->FirePointComponent;
 
 	const FVector Start = FirePoint ? FirePoint->GetComponentLocation() : Owner->GetActorLocation();
 	FVector ForwardDir = FirePoint ? FirePoint->GetForwardVector() : Owner->GetActorForwardVector();
@@ -33,7 +33,7 @@ void URangedWeaponComponent::PerformAttack()
 		Params
 	);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.0f, 0, 3.0f);
+	// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.0f, 0, 3.0f);
 
 	const FVector Target = bHit ? Hit.ImpactPoint : End;
 	const FRotator ProjectileRot = (Target - Start).Rotation();

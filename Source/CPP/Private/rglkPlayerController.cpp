@@ -74,7 +74,7 @@ void ArglkPlayerController::SetInputState(EInputState NewState)
 		bEnableClickEvents = true;
 		bEnableMouseOverEvents = true;
 		break;
-
+	
 	case EInputState::UI:
 		Subsystem->AddMappingContext(UIContext, 0);
 		SetInputMode(FInputModeUIOnly());

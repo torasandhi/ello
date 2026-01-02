@@ -1,23 +1,18 @@
 #include "Enemy/rglkEnemyCharacter.h"
-
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "ObjectPoolSubsystem.h"
-#include "CPP/CPP.h"
+#include "Components/WeaponComponent.h"
 #include "Subsystem/Instance/ScoreSubsystem.h"
 
 ArglkEnemyCharacter::ArglkEnemyCharacter()
 {
-	// Configure Movement
-	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 400.0f, 0.0f); // Turn speed
-
-	MoveSpeed = 400.0f;
-	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
-
-	// Configure Collision
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+	RangedWeaponComp = CreateDefaultSubobject<URangedWeaponComponent>(TEXT("RangedWeaponComponent"));
+	FirePointComponent = CreateDefaultSubobject<USceneComponent>(TEXT("FirePointComponent"));
+	FirePointComponent->SetupAttachment(RootComponent);
+	FirePointComponent->SetRelativeLocation(FVector(67.67f, 0.0f, 0.0f));
 }
 
 IPoolableInterface::FOnReturnedToPool& ArglkEnemyCharacter::OnReturnedToPool()
@@ -30,6 +25,19 @@ void ArglkEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 	FindTarget();
 	SetState(EEnemyState::Chasing);
+	
+	switch (Type)
+	{
+	case EEnemyType::Melee:
+		RangedWeaponComp->Deactivate();
+		break;
+	case EEnemyType::Ranged:
+		WeaponComp->Deactivate();
+		break;
+	default:
+		break;
+	}
+
 }
 
 void ArglkEnemyCharacter::Tick(float DeltaTime)
@@ -107,7 +115,18 @@ void ArglkEnemyCharacter::Die()
 
 void ArglkEnemyCharacter::Attack()
 {
-	Super::Attack();
+	switch (Type)
+	{
+	case EEnemyType::Melee:
+		WeaponComp->PerformAttack();
+		break;
+	case EEnemyType::Ranged:
+		RangedWeaponComp->PerformAttack();
+		break;
+	default:
+		break;
+	}
+
 	AttackTimer.Invalidate();
 }
 
@@ -124,7 +143,7 @@ void ArglkEnemyCharacter::OnSpawnFromPool_Implementation()
 }
 
 
-// Refactor to 1 class per state (imma do this when i have time)
+// Refactor to 1 class per state (imma do this when I have time)
 // -- Handle States --
 
 void ArglkEnemyCharacter::SetState(EEnemyState NewState)
@@ -175,6 +194,8 @@ void ArglkEnemyCharacter::UpdateState(float DeltaTime)
 	case EEnemyState::Attacking:
 		UpdateAttack(DeltaTime);
 		break;
+	default:
+		break;
 	}
 }
 
@@ -209,7 +230,7 @@ void ArglkEnemyCharacter::UpdateAttack(float DeltaTime)
 		AttackTimer,
 		this,
 		&ArglkEnemyCharacter::Attack,
-		2.f,
+		0.7f,
 		false
 	);
 

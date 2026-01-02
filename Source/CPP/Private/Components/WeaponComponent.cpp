@@ -2,8 +2,8 @@
 
 
 #include "Components/WeaponComponent.h"
-
 #include "rglkCharacter.h"
+#include "CPP/CPP.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -14,7 +14,7 @@ UWeaponComponent::UWeaponComponent()
 }
 
 void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+                                     FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
@@ -29,11 +29,12 @@ void UWeaponComponent::BeginPlay()
 
 void UWeaponComponent::PerformAttack()
 {
-	AActor* Owner = GetOwner();
+	ArglkCharacter* Owner = GetOwner<ArglkCharacter>();
 	if (!Owner) return;
 
-	FVector Start = Owner->GetActorLocation();
-	FVector Forward = Owner->GetActorForwardVector();
+	USceneComponent* FirePoint = Owner->FirePointComponent;
+	FVector Start = FirePoint ? FirePoint->GetComponentLocation() : Owner->GetActorLocation();
+	FVector Forward = FirePoint ? FirePoint->GetForwardVector() : Owner->GetActorForwardVector();
 	FVector End = Start + (Forward * AttackRange);
 
 	FHitResult Hit;
@@ -49,10 +50,12 @@ void UWeaponComponent::PerformAttack()
 		UEngineTypes::ConvertToTraceType(ECC_Pawn),
 		false,
 		ActorsToIgnore,
-		EDrawDebugTrace::None,
+		EDrawDebugTrace::ForOneFrame,
 		Hit,
 		true
 	);
+
+	PRINT_DEBUG_MESSAGE("WeaponComponent IS Performing Attack()")
 
 	if (bHit && Hit.GetActor())
 	{

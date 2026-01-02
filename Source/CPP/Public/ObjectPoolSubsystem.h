@@ -18,7 +18,8 @@ public:
 
 	// Get an actor by its CLASS type
 	UFUNCTION(BlueprintCallable, Category = "Object Pool")
-	AActor* GetActorFromPool(TSubclassOf<AActor> ActorClass, FVector Location, FRotator Rotation);
+	AActor* GetActorFromPool(TSubclassOf<AActor> ActorClass,
+		FVector Location, FRotator Rotation);
 
 	UFUNCTION(BlueprintCallable, Category = "Object Pool")
 	void ReturnActorToPool(AActor* ActorToReturn);

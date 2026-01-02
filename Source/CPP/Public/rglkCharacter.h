@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "rglkCharacter.generated.h"
 
+class USceneComponent;
 class UWeaponComponent;
 struct FDataTableRowHandle;
 
@@ -30,19 +31,19 @@ public:
 	float MoveSpeed = 600.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character State")
 	bool bIsDead = false;
-	
+
 	void ApplyBaseStats(const TCHAR* DebugString = TEXT("ApplyBaseStats"));
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UWeaponComponent* WeaponComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USceneComponent* FirePointComponent;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	virtual void Attack();
-
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	virtual void Die();
-
-
+	UFUNCTION(BlueprintCallable, Category = "Combat")
 	virtual float TakeDamage(
 		float DamageAmount,
 		FDamageEvent const& DamageEvent,

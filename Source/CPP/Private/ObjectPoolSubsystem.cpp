@@ -11,8 +11,7 @@ void UObjectPoolSubsystem::InitializePoolsFromAsset(UMyPoolConfig* Config)
         TArray<AActor*>& ActorList = PoolDictionary.FindOrAdd(PoolDef.actorClass);
         for (int32 i = 0; i < PoolDef.warmupPoolSize; i++)
         {
-            AActor* NewActor = GetWorld()->SpawnActor<AActor>(PoolDef.actorClass, FVector::ZeroVector, FRotator::ZeroRotator);
-            if (NewActor)
+            if (AActor* NewActor = GetWorld()->SpawnActor<AActor>(PoolDef.actorClass, FVector::ZeroVector, FRotator::ZeroRotator))
             {
                 NewActor->SetActorHiddenInGame(true);
                 NewActor->SetActorEnableCollision(false);
