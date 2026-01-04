@@ -32,7 +32,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character State")
 	bool bIsDead = false;
 
-	void ApplyBaseStats(const TCHAR* DebugString = TEXT("ApplyBaseStats"));
+	virtual void ApplyBaseStats(const TCHAR* DebugString = TEXT("ApplyBaseStats"));
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UWeaponComponent* WeaponComp;
@@ -43,6 +43,8 @@ public:
 	virtual void Attack();
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	virtual void Die();
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	virtual void PlayAttackEffects();
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	virtual float TakeDamage(
 		float DamageAmount,

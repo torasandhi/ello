@@ -9,8 +9,7 @@
 #include "Player/rglkPlayerCharacter.h"
 #include "UI/MainWidget.h"
 
-void ArglkPlayerController::BeginPlay()
-{
+void ArglkPlayerController::BeginPlay(){
 	Super::BeginPlay();
 	SetInputState(EInputState::UI);
 
@@ -23,16 +22,14 @@ void ArglkPlayerController::BeginPlay()
 	}
 }
 
-void ArglkPlayerController::PlayerTick(float DeltaTime)
-{
+void ArglkPlayerController::PlayerTick(float DeltaTime){
 	Super::PlayerTick(DeltaTime);
 
 	if (!bUseMouseAim) return;
 	OnUpdateMouseAim();
 }
 
-void ArglkPlayerController::SetupInputComponent()
-{
+void ArglkPlayerController::SetupInputComponent(){
 	Super::SetupInputComponent();
 	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
 	{
@@ -41,12 +38,10 @@ void ArglkPlayerController::SetupInputComponent()
 		EIC->BindAction(SwapUtilAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnSwapUtilAction);
 		EIC->BindAction(StickAimAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnStickAimAction);
 		EIC->BindAction(CheckMouseAction, ETriggerEvent::Triggered, this, &ArglkPlayerController::OnMouseMove);
-
 	}
 }
 
-void ArglkPlayerController::SetInputState(EInputState NewState)
-{
+void ArglkPlayerController::SetInputState(EInputState NewState){
 	if (CurrentState == NewState)
 	{
 		PRINT_DEBUG_MESSAGE("STATE IS THE SAME");
@@ -62,7 +57,6 @@ void ArglkPlayerController::SetInputState(EInputState NewState)
 		return;
 	}
 
-	// Clear previous contexts
 	Subsystem->ClearAllMappings();
 
 	switch (NewState)
@@ -74,19 +68,20 @@ void ArglkPlayerController::SetInputState(EInputState NewState)
 		bEnableClickEvents = true;
 		bEnableMouseOverEvents = true;
 		break;
-	
 	case EInputState::UI:
 		Subsystem->AddMappingContext(UIContext, 0);
 		SetInputMode(FInputModeUIOnly());
 		bShowMouseCursor = true;
 		break;
+	case EInputState::NoInput:
+		SetInputMode(FInputModeGameOnly());
+		bShowMouseCursor = false;
+		break;
 	}
-
 	CurrentState = NewState;
 }
 
-void ArglkPlayerController::OnMoveAction(const FInputActionValue& value)
-{
+void ArglkPlayerController::OnMoveAction(const FInputActionValue& value){
 	if (CurrentState != EInputState::Gameplay) return;
 	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
 	{
@@ -94,8 +89,7 @@ void ArglkPlayerController::OnMoveAction(const FInputActionValue& value)
 	}
 }
 
-void ArglkPlayerController::OnAttackAction(const FInputActionValue& value)
-{
+void ArglkPlayerController::OnAttackAction(const FInputActionValue& value){
 	if (CurrentState != EInputState::Gameplay) return;
 	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
 	{
@@ -103,9 +97,7 @@ void ArglkPlayerController::OnAttackAction(const FInputActionValue& value)
 	}
 }
 
-void ArglkPlayerController::OnSwapUtilAction(const FInputActionValue& value)
-{
-
+void ArglkPlayerController::OnSwapUtilAction(const FInputActionValue& value){
 	if (CurrentState != EInputState::Gameplay) return;
 	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
 	{
@@ -113,8 +105,7 @@ void ArglkPlayerController::OnSwapUtilAction(const FInputActionValue& value)
 	}
 }
 
-void ArglkPlayerController::OnStickAimAction(const FInputActionValue& value)
-{
+void ArglkPlayerController::OnStickAimAction(const FInputActionValue& value){
 	bUseMouseAim = false;
 	if (ArglkPlayerCharacter* PCharacter = GetPawn<ArglkPlayerCharacter>())
 	{
@@ -122,13 +113,11 @@ void ArglkPlayerController::OnStickAimAction(const FInputActionValue& value)
 	}
 }
 
-void ArglkPlayerController::OnMouseMove(const FInputActionValue& value)
-{
+void ArglkPlayerController::OnMouseMove(const FInputActionValue& value){
 	bUseMouseAim = true;
 }
 
-void ArglkPlayerController::OnUpdateMouseAim()
-{
+void ArglkPlayerController::OnUpdateMouseAim(){
 	if (CurrentState != EInputState::Gameplay)
 		return;
 	FVector WorldOrigin, WorldDirection;

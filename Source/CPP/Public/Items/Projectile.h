@@ -29,7 +29,6 @@ public:
 	                        int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	virtual void ReturnActorToPool();
-
 	UPROPERTY()
 	USphereComponent* SphereCollider;
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
@@ -41,7 +40,6 @@ public:
 	float AliveTime = 0.f;
 
 protected:
-
 	FVector MoveDirection = FVector::ZeroVector;
 	FOnReturnedToPool ReturnToPool;
 };

@@ -15,8 +15,9 @@ class UInputAction;
 UENUM(BlueprintType)
 enum class EInputState : uint8
 {
+	NoInput,
 	Gameplay,
-	UI
+	UI,
 };
 
 UCLASS()

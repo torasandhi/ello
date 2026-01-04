@@ -33,7 +33,7 @@ void URangedWeaponComponent::PerformAttack()
 		Params
 	);
 
-	// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.0f, 0, 3.0f);
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 2.0f, 0, 3.0f);
 
 	const FVector Target = bHit ? Hit.ImpactPoint : End;
 	const FRotator ProjectileRot = (Target - Start).Rotation();

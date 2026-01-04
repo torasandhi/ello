@@ -9,8 +9,7 @@
 #include "Components/RangedWeaponComponent.h"
 #include "CPP/CPP.h"
 
-ArglkPlayerCharacter::ArglkPlayerCharacter()
-{
+ArglkPlayerCharacter::ArglkPlayerCharacter(){
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -46,15 +45,13 @@ ArglkPlayerCharacter::ArglkPlayerCharacter()
 	SlashEffect->bAutoActivate = false;
 }
 
-void ArglkPlayerCharacter::BeginPlay()
-{
+void ArglkPlayerCharacter::BeginPlay(){
 	Super::BeginPlay();
 	ApplyBaseStats(TEXT("Player"));
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
-void ArglkPlayerCharacter::Attack()
-{
+void ArglkPlayerCharacter::Attack(){
 	switch (AttackType)
 	{
 	default:
@@ -63,10 +60,8 @@ void ArglkPlayerCharacter::Attack()
 
 	case EAttackType::Melee:
 		if (!WeaponComp) return;
-		if (SlashEffect && !SlashEffect->IsActive())
-		{
-			WeaponComp->PerformAttack();
-		}
+		if (!SlashEffect && !SlashEffect->IsActive())return;
+		WeaponComp->PerformAttack();
 		break;
 	case EAttackType::Ranged:
 		if (!RangedComp) return;
@@ -75,14 +70,18 @@ void ArglkPlayerCharacter::Attack()
 	}
 }
 
-void ArglkPlayerCharacter::Die()
-{
+void ArglkPlayerCharacter::Die(){
 	Super::Die();
 }
 
+void ArglkPlayerCharacter::PlayAttackEffects(){
+	if (!SlashEffect) return;
+	SlashEffect->SetCustomTimeDilation(2.f);
+	SlashEffect->Activate(true);
+}
 
-void ArglkPlayerCharacter::Execute_Move(const FInputActionValue& Value)
-{
+
+void ArglkPlayerCharacter::Execute_Move(const FInputActionValue& Value){
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
@@ -97,8 +96,7 @@ void ArglkPlayerCharacter::Execute_Move(const FInputActionValue& Value)
 	}
 }
 
-void ArglkPlayerCharacter::Execute_AimStick(const FInputActionValue& Value)
-{
+void ArglkPlayerCharacter::Execute_AimStick(const FInputActionValue& Value){
 	const FVector2D Aim = Value.Get<FVector2D>();
 	if (Aim.IsNearlyZero()) return;
 
@@ -108,8 +106,7 @@ void ArglkPlayerCharacter::Execute_AimStick(const FInputActionValue& Value)
 	AimingComponent->SetRelativeRotation(Rot);
 }
 
-void ArglkPlayerCharacter::Execute_AimAtMousePos(const FVector& WorldPos)
-{
+void ArglkPlayerCharacter::Execute_AimAtMousePos(const FVector& WorldPos){
 	const FVector Dir = (WorldPos - AimingComponent->GetComponentLocation()).GetSafeNormal();
 	const FRotator Rot = Dir.Rotation();
 
@@ -117,15 +114,13 @@ void ArglkPlayerCharacter::Execute_AimAtMousePos(const FVector& WorldPos)
 }
 
 
-void ArglkPlayerCharacter::Execute_Attack(const FInputActionValue& Value)
-{
+void ArglkPlayerCharacter::Execute_Attack(const FInputActionValue& Value){
 	if (!WeaponComp) return;;
 
 	Attack();
 }
 
-void ArglkPlayerCharacter::Execute_Swap(const FInputActionValue& Value)
-{
+void ArglkPlayerCharacter::Execute_Swap(const FInputActionValue& Value){
 	if (TypeCount > 0)
 	{
 		CurrentTypeIndex++;
@@ -155,16 +150,14 @@ void ArglkPlayerCharacter::Execute_Swap(const FInputActionValue& Value)
 
 
 float ArglkPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-                                       class AController* EventInstigator, AActor* DamageCauser)
-{
+                                       class AController* EventInstigator, AActor* DamageCauser){
 	const float ActualDamage = Super::TakeDamage(
 		DamageAmount,
 		DamageEvent,
 		EventInstigator,
 		DamageCauser);
 
-	CurrentHealth -= ActualDamage;
-
+	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
 	if (CurrentHealth <= 0)
 	{
 		Die();
@@ -174,7 +167,10 @@ float ArglkPlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent c
 	return ActualDamage;
 }
 
-float ArglkPlayerCharacter::GetHealthPercent() const
-{
+void ArglkPlayerCharacter::ApplyBaseStats(const TCHAR* DebugString){
+	Super::ApplyBaseStats(DebugString);
+}
+
+float ArglkPlayerCharacter::GetHealthPercent() const{
 	return CurrentHealth / MaxHealth;
 }

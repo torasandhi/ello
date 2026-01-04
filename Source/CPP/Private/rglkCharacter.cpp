@@ -63,6 +63,10 @@ void ArglkCharacter::Die()
 	PRINT_DEBUG_MESSAGE(GetName() + " has Died");
 }
 
+void ArglkCharacter::PlayAttackEffects()
+{
+}
+
 float ArglkCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
                                  AActor* DamageCauser)
 {

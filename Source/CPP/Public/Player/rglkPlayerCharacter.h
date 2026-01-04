@@ -45,9 +45,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Attack() override;
 	virtual void Die() override;
+	virtual void PlayAttackEffects() override;
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
-
+	virtual void ApplyBaseStats(const TCHAR* DebugString = L"ApplyBaseStats") override;
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	USpringArmComponent* CameraBoom;
@@ -64,7 +65,7 @@ public:
 	void Execute_Attack(const FInputActionValue& Value);
 	void Execute_Swap(const FInputActionValue& Value);
 	void Execute_AimStick(const FInputActionValue& Value);
-
+	
 private:
 	EAttackType AttackType = EAttackType::Ranged;
 	int32 TypeCount = static_cast<int>(EAttackType::COUNT);

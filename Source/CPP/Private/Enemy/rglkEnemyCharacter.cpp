@@ -25,7 +25,7 @@ void ArglkEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 	FindTarget();
 	SetState(EEnemyState::Chasing);
-	
+
 	switch (Type)
 	{
 	case EEnemyType::Melee:
@@ -243,12 +243,16 @@ float ArglkEnemyCharacter::TakeDamage(float DamageAmount, struct FDamageEvent co
                                       class AController* EventInstigator, AActor* DamageCauser)
 {
 	const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-
-	CurrentHealth -= ActualDamage;
+	CurrentHealth = FMath::Clamp(CurrentHealth - ActualDamage, 0.f, MaxHealth);
 	if (CurrentHealth <= 0)
 	{
 		Die();
 	}
 
 	return ActualDamage;
+}
+
+void ArglkEnemyCharacter::ApplyBaseStats(const TCHAR* DebugString)
+{
+	Super::ApplyBaseStats(DebugString);
 }

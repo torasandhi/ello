@@ -3,12 +3,9 @@
 
 #include "Components/WeaponComponent.h"
 
-#include "NiagaraComponent.h"
 #include "rglkCharacter.h"
-#include "CPP/CPP.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Player/rglkPlayerCharacter.h"
 
 
 UWeaponComponent::UWeaponComponent()
@@ -22,7 +19,6 @@ void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-
 // Called when the game starts
 void UWeaponComponent::BeginPlay()
 {
@@ -30,18 +26,6 @@ void UWeaponComponent::BeginPlay()
 	BaseDamage = GetOwner<ArglkCharacter>()->BaseDamage;
 }
 
-void UWeaponComponent::TriggerSlashEffect()
-{
-	// only for player character as of now
-	if (ArglkPlayerCharacter* PCharacter = GetOwner<ArglkPlayerCharacter>())
-	{
-		if (UNiagaraComponent* SlashEffect = PCharacter->SlashEffect)
-		{
-			SlashEffect->SetCustomTimeDilation(2.f);
-			SlashEffect->Activate();
-		}
-	}
-}
 
 
 void UWeaponComponent::PerformAttack()
@@ -50,30 +34,38 @@ void UWeaponComponent::PerformAttack()
 	if (!Owner) return;
 
 	USceneComponent* FirePoint = Owner->FirePointComponent;
-	FVector Start = FirePoint ? FirePoint->GetComponentLocation() : Owner->GetActorLocation();
+	FVector Start = FirePoint
+		                ? FirePoint->GetComponentLocation() + FVector(0.f, 0.f, 50.f)
+		                : Owner->GetActorLocation() + FVector(0.f, 0.f, 50.f);
 	FVector Forward = FirePoint ? FirePoint->GetForwardVector() : Owner->GetActorForwardVector();
 	FVector End = Start + (Forward * AttackRange);
 
-	FHitResult Hit;
-
+	TArray<FHitResult> ActorsHit;
 	TArray<AActor*> ActorsToIgnore;
 	ActorsToIgnore.Add(Owner);
-
-	bool bHit = UKismetSystemLibrary::SphereTraceSingle(
+	bool bHit = UKismetSystemLibrary::SphereTraceMulti(
 		GetWorld(),
 		Start,
 		End,
-		20.f,
+		100.f,
 		UEngineTypes::ConvertToTraceType(ECC_Pawn),
 		false,
 		ActorsToIgnore,
 		EDrawDebugTrace::ForOneFrame,
-		Hit,
+		ActorsHit,
 		true
 	);
-	
-	if (bHit && Hit.GetActor())
+
+	TArray<AActor*> DamagedActors;
+	for (const FHitResult& Hit : ActorsHit)
 	{
+		if (!bHit)
+			return;
+		if (Hit.GetActor() && DamagedActors.Contains(Hit.GetActor()))
+			continue;
+		if (Hit.GetActor()->GetClass()->IsChildOf(Owner->GetClass()))
+			continue;
+
 		UGameplayStatics::ApplyDamage(
 			Hit.GetActor(),
 			BaseDamage,
@@ -81,8 +73,9 @@ void UWeaponComponent::PerformAttack()
 			Owner,
 			UDamageType::StaticClass()
 		);
+		DamagedActors.Add(Hit.GetActor());
 		UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 	}
 
-	TriggerSlashEffect();
+	Owner->PlayAttackEffects();
 }

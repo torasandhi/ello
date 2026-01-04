@@ -68,4 +68,5 @@ private:
 	void UpdateAttack(float DeltaTime);
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
+	virtual void ApplyBaseStats(const TCHAR* DebugString = L"ApplyBaseStats") override;
 };
