@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "rglkCharacter.h"
 #include "UPoolableInterface.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Components/RangedWeaponComponent.h"
 #include "rglkEnemyCharacter.generated.h"
 
@@ -28,10 +29,13 @@ class CPP_API ArglkEnemyCharacter : public ArglkCharacter, public IPoolableInter
 	GENERATED_BODY()
 
 public:
+
 	ArglkEnemyCharacter();
 	virtual FOnReturnedToPool& OnReturnedToPool() override;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	URangedWeaponComponent* RangedWeaponComp;
+	UPROPERTY(EditDefaultsOnly, Category = "AI")
+	UBehaviorTree* BehaviorTree;
 
 protected:
 	virtual void BeginPlay() override;
@@ -52,7 +56,7 @@ private:
 	EEnemyState CurrentState = EEnemyState::Chasing;
 	UPROPERTY(EditDefaultsOnly, Category = "Type")
 	EEnemyType Type = EEnemyType::Melee;
-
+	
 	FVector SeparationForce;
 	FTimerHandle AttackTimer;
 	FOnReturnedToPool ReturnToPool;
@@ -70,3 +74,4 @@ private:
 	                         class AController* EventInstigator, AActor* DamageCauser) override;
 	virtual void ApplyBaseStats(const TCHAR* DebugString = L"ApplyBaseStats") override;
 };
+

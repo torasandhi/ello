@@ -3,6 +3,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "ObjectPoolSubsystem.h"
+#include "rglkGameMode.h"
 #include "Components/WeaponComponent.h"
 #include "Subsystem/Instance/ScoreSubsystem.h"
 
@@ -34,14 +35,15 @@ void ArglkEnemyCharacter::BeginPlay()
 	{
 	case EEnemyType::Melee:
 		RangedWeaponComp->Deactivate();
+		StopDistance = 100.f;
 		break;
 	case EEnemyType::Ranged:
 		WeaponComp->Deactivate();
+		StopDistance = 1000.f;
 		break;
 	default:
 		break;
 	}
-
 }
 
 void ArglkEnemyCharacter::Tick(float DeltaTime)
@@ -65,9 +67,7 @@ void ArglkEnemyCharacter::ChaseTarget()
 		FVector Direction = (TargetActor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 		AddMovementInput(Direction, 1.0f);
 	}
-	else
-	{
-	}
+	else {}
 }
 
 bool ArglkEnemyCharacter::TimerManager(const FTimerHandle MyTimerHandle) const
@@ -95,12 +95,11 @@ void ArglkEnemyCharacter::NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, 
 
 		if (Other->ActorHasTag("Player"))
 		{
-			// Big push from player
-			SeparationForce += (PushDir * 2.0f);
+			SeparationForce = SeparationForce.GetClampedToMaxSize(2.f);
 		}
 		else if (Other->ActorHasTag("Enemy"))
 		{
-			SeparationForce += (PushDir * 0.5f);
+			SeparationForce = SeparationForce.GetClampedToMaxSize(2.f);
 		}
 	}
 }
@@ -110,11 +109,13 @@ void ArglkEnemyCharacter::Die()
 	if (bIsDead) return;
 	bIsDead = true;
 	AttackTimer.Invalidate();
+	GetWorld()->GetAuthGameMode<ArglkGameMode>()->SpawnedEnemiesList.Remove(this);
 	if (UObjectPoolSubsystem* Pool = GetWorld()->GetSubsystem<UObjectPoolSubsystem>())
 	{
 		Pool->ReturnActorToPool(this);
 		ReturnToPool.Broadcast(this);
 		GetGameInstance()->GetSubsystem<UScoreSubsystem>()->SetScore(1);
+		GetWorld()->GetAuthGameMode<ArglkGameMode>()->TryStartWaveTransition();
 	}
 }
 
@@ -155,6 +156,12 @@ void ArglkEnemyCharacter::SetState(EEnemyState NewState)
 {
 	if (CurrentState == NewState) return;
 
+	const bool bNeedsTick =
+		(NewState == EEnemyState::Chasing ||
+		 NewState == EEnemyState::Attacking);
+
+	SetActorTickEnabled(bNeedsTick);
+	
 	ExitState(CurrentState);
 	CurrentState = NewState;
 	EnterState(CurrentState);
@@ -239,9 +246,12 @@ void ArglkEnemyCharacter::UpdateAttack(float DeltaTime)
 		false
 	);
 
-	float Distance = FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation());
-	if (Distance > StopDistance)
+	float StopDistanceSq = StopDistance * StopDistance;
+	float DistanceSq = FVector::DistSquared(GetActorLocation(), TargetActor->GetActorLocation());
+	if (DistanceSq > StopDistance)
+	{
 		SetState(EEnemyState::Chasing);
+	}
 }
 
 float ArglkEnemyCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,

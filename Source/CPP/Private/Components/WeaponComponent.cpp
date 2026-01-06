@@ -74,7 +74,7 @@ void UWeaponComponent::PerformAttack()
 			UDamageType::StaticClass()
 		);
 		DamagedActors.Add(Hit.GetActor());
-		UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+		// UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
 	}
 
 	Owner->PlayAttackEffects();

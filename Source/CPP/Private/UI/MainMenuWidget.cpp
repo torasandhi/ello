@@ -2,6 +2,8 @@
 
 
 #include "UI/MainMenuWidget.h"
+
+#include "rglkGameMode.h"
 #include "rglkPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -60,6 +62,7 @@ void UMainMenuWidget::OnStartButtonClick()
 	}
 
 	GetWorld()->GetFirstPlayerController<ArglkPlayerController>()->SetInputState(EInputState::Gameplay);
+	GetWorld()->GetAuthGameMode<ArglkGameMode>()->StartWave();
 }
 
 
